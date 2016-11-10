@@ -82,7 +82,7 @@ void trackObject(IplImage* imgThresh){
 					//drawing lines around the triangle
 //					cvLine(imgTracking, *pt[0],*pt[1], cvScalar(55,0,0),5);
 //					cvLine(imgTracking, *pt[1],*pt[2],cvScalar(55,0,0),5);
-//					cvLine(imgTracking, *pt[2], *pt[0], cvScalar(55,0,0),5);
+//		 			cvLine(imgTracking, *pt[2], *pt[0], cvScalar(55,0,0),5);
 				}
 
 				lastX1 = posX;
