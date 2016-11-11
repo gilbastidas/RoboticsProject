@@ -1,6 +1,8 @@
-#include <cv.h>
-#include <highgui.h>
-#include <opencv2/opencv.hpp>
+#include "cv.h"
+#include "highgui.h"
+#include "opencv2/opencv.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
+#include <iostream>
 using namespace std;
 
 
@@ -17,6 +19,14 @@ int lastY1 = -1;
 
 int lastX2 = -1;
 int lastY2 = -1;
+
+
+float distance(int x1, int y1, int x2, int y2 ){
+	float dist;
+	dist = sqrt(pow(2,(x2-x1)) + pow(2,(y2-y1)));
+	return dist;
+}
+
 
 void trackObject(IplImage* imgThresh){
 	//CvSeq* define un arreglo llamado contour, es una secuancia dinamica de crecimiento
@@ -50,12 +60,13 @@ void trackObject(IplImage* imgThresh){
 	 * cvDrawContours(CvArr* img, CvSeq* contour, CvScalar externalColor, CvScalar holeColor, int maxLevel, int thickness=1, int lineType=8 )
 	 * Link: http://docs.opencv.org/2.4/modules/core/doc/drawing_functions.html#void%20line(Mat&%20img,%20Point%20pt1,%20Point%20pt2,%20const%20Scalar&%20color,%20int%20thickness,%20int%20lineType,%20int%20shift)
 	 */
-	cvFindContours(imgThresh, storage, &contour, sizeof(CvContour), CV_RETR_LIST, CV_CHAIN_APPROX_SIMPLE, cvPoint(0,0));
+	cvFindContours(imgThresh, storage, &contour, sizeof(CvContour), CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, cvPoint(0,0));
 	//cvContourArea(contour);
 	//Prueba, no se si esto me funcione para dibujar el contorno del triangulo
 	//cvDrawContours(imgThresh, contour, cvScalar(45,165,24), cvScalar(45,165,24), 100,8);
-
+	//cvDrawContours(imgTracking, contour, cvScalar(45,165,24), cvScalar(45,165,24), 100,4);
 	//iterating through each contour
+
 	while(contour)
 	{
 		//obtain a sequence of points of the countour, pointed by the variable 'countour'
@@ -73,6 +84,19 @@ void trackObject(IplImage* imgThresh){
 			int posX=( pt[0]->x + pt[1]->x + pt[2]->x )/3;
 			int posY=( pt[0]->y + pt[1]->y + pt[2]->y )/3;
 
+			int vertice;
+
+			if(distance(pt[0]->x,pt[0]->y,pt[1]->x,pt[1]->y) < distance(pt[1]->x,pt[1]->y,pt[2]->x,pt[2]->y) && distance(pt[0]->x,pt[0]->y,pt[1]->x,pt[1]->y) < distance(pt[0]->x,pt[0]->y,pt[2]->x,pt[2]->y))
+			{
+				vertice = 2;
+			}else if(distance(pt[2]->x,pt[2]->y,pt[1]->x,pt[1]->y) < distance(pt[1]->x,pt[1]->y,pt[0]->x,pt[0]->y) && distance(pt[2]->x,pt[2]->y,pt[1]->x,pt[1]->y) < distance(pt[0]->x,pt[0]->y,pt[2]->x,pt[2]->y))
+			{
+				vertice = 0;
+			}else{
+				vertice = 1;
+			}
+
+
 			//if(posX > 360 ){
 				if(lastX1>=0 && lastY1>=0 && posX>=0 && posY>=0)
 				{
@@ -87,6 +111,10 @@ void trackObject(IplImage* imgThresh){
 
 				lastX1 = posX;
 				lastY1 = posY;
+
+				cvLine(imgTracking, cvPoint(posX, posY), cvPoint(pt[vertice]->x, pt[vertice]->y), cvScalar(0,255,0), 4);
+
+
 			//}
 //			else{
 //				if(lastX2>=0 && lastY2>=0 && posX>=0 && posY>=0)
@@ -108,17 +136,18 @@ void trackObject(IplImage* imgThresh){
 }
 
 
+
+
 int main(){
     //load the video file to the memory
 	//CvCapture *capture =     cvCaptureFromAVI("E:/Projects/Robot/IESL Robot/robot/a.avi");
 	CvCapture *capture =     cvCaptureFromCAM(0);
 
+
     if(!capture){
         printf("Capture failure\n");
         return -1;
     }
-
-
 
     IplImage* frame=0;
     frame = cvQueryFrame(capture);
@@ -133,7 +162,9 @@ int main(){
 
 	//iterate through each frames of the video
     while(true){
-
+    	//imgTracking=cvCreateImage(cvGetSize(frame),IPL_DEPTH_8U, 3);
+    	//cvZero(imgTracking); //covert the image, 'imgTracking' to black
+    	cvSet(frame,CV_RGB(0,0,0));
         frame = cvQueryFrame(capture);
         if(!frame) break;
         frame=cvCloneImage(frame);
@@ -147,6 +178,14 @@ int main(){
 
         //thresholding the grayscale image to get better results
 		cvThreshold(imgGrayScale,imgGrayScale,100,255,CV_THRESH_BINARY_INV);
+
+
+		//image dilatation
+		//cvDilate(const CvArr* src, CvArr* dst, IplConvKernel* element=NULL, int iterations=1 )
+		//Link: http://docs.opencv.org/2.4/modules/imgproc/doc/filtering.html?highlight=dilate#dilate
+		// Erosion y dilatacion de muestra, pero no he comprobado si funciona.
+		//cvDilate(imgGrayScale,imgGrayScale,NULL,40);
+		//cvErode(imgGrayScale,imgGrayScale,NULL,40);
 
         //track the possition of the ball
         trackObject(imgGrayScale);
@@ -165,7 +204,11 @@ int main(){
         int c = cvWaitKey(10);
         //If 'ESC' is pressed, break the loop
         if((char)c==27 ) break;
+
+
     }
+
+
 
     cvDestroyAllWindows();
     cvReleaseImage(&imgTracking);
@@ -173,3 +216,4 @@ int main(){
 
     return 0;
 }
+
