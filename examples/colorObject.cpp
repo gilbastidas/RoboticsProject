@@ -17,7 +17,7 @@
 //         return -1;
 //    }
 //
-//    namedWindow("Control", CV_WINDOW_AUTOSIZE); //create a window called "Control"
+// namedWindow("Control", CV_WINDOW_AUTOSIZE); //create a window called "Control"
 //
 // int iLowH = 170;
 // int iHighH = 179;
