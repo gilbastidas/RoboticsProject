@@ -93,7 +93,7 @@ int main()
     // <<<< Kalman Filter
 
     // Camera Index
-    int idx = 0;
+    int idx = 1;
 
     // Camera Capture
     cv::VideoCapture cap;
@@ -165,23 +165,35 @@ int main()
 
         // >>>>> HSV conversion
         cv::Mat frmHsv;
+        cv::Mat frmHsv2;
         cv::cvtColor(blur, frmHsv, CV_BGR2HSV);
+        cv::cvtColor(blur, frmHsv2, CV_BGR2HSV);
         // <<<<< HSV conversion
 
         // >>>>> Color Thresholding
         // Note: change parameters for different colors
         cv::Mat rangeRes = cv::Mat::zeros(frame.size(), CV_8UC1);
+        cv::Mat rangeResOrange = cv::Mat::zeros(frame.size(), CV_8UC1);
+
+
         cv::inRange(frmHsv, cv::Scalar(MIN_H_BLUE / 2, 100, 80),
                     cv::Scalar(MAX_H_BLUE / 2, 255, 255), rangeRes);
+        cv::inRange(frmHsv2, cv::Scalar(126,89,0),
+        			cv::Scalar(179, 255, 255), rangeResOrange);
         // <<<<< Color Thresholding
 
         // >>>>> Improving the result
         cv::erode(rangeRes, rangeRes, cv::Mat(), cv::Point(-1, -1), 2);
         cv::dilate(rangeRes, rangeRes, cv::Mat(), cv::Point(-1, -1), 2);
+
+        cv::erode(rangeResOrange, rangeResOrange, cv::Mat(), cv::Point(-1, -1), 2);
+        cv::dilate(rangeResOrange, rangeResOrange, cv::Mat(), cv::Point(-1, -1), 2);
+
         // <<<<< Improving the result
 
         // Thresholding viewing
         cv::imshow("Threshold", rangeRes);
+        cv::imshow("Threshold_Orange", rangeResOrange);
 
         // >>>>> Contours detection
         vector<vector<cv::Point> > contours;
@@ -220,6 +232,14 @@ int main()
 				}
 
 				cv::line(res,triCenter,triEdge, CV_RGB(255,164,6),4);
+			}else{
+				cout << "corners found:" << result.size() << endl;
+//				int lowestdistance = 100000000;
+//				for(int i=0;i<result.size();i++){
+//					for(int j = i+1;j<result.size();j++){
+//
+//					}
+//				}
 			}
         }
         // >>>>> Filtering
