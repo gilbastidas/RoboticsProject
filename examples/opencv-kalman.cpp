@@ -93,7 +93,7 @@ int main()
     // <<<< Kalman Filter
 
     // Camera Index
-    int idx = 1;
+    int idx = 0;
 
     // Camera Capture
     cv::VideoCapture cap;
@@ -232,8 +232,9 @@ int main()
 				}
 
 				cv::line(res,triCenter,triEdge, CV_RGB(255,164,6),4);
+
 			}else{
-				cout << "corners found:" << result.size() << endl;
+				cout << "Corners found:" << result.size() << endl;
 //				int lowestdistance = 100000000;
 //				for(int i=0;i<result.size();i++){
 //					for(int j = i+1;j<result.size();j++){
@@ -242,6 +243,54 @@ int main()
 //				}
 			}
         }
+
+        //Drawing grid
+        int width=res.size().width;
+        int height=res.size().height;
+        int w = width/5;
+        int h = height/3;
+        for (int i=0; i<height; i+=h)
+        	cv::line(res,cv::Point(0,i),cv::Point(width,i), CV_RGB(255,164,6),1, 8);
+
+        for (int i=0; i<width; i+=w)
+        	cv::line(res, cv::Point(i,0), cv::Point(i,height), CV_RGB(255,164,6),1,8);
+
+        //Screen's dimensions
+        stringstream dimension_txt;
+        //sstr << "(" << center.x << "," << center.y << ")";
+        dimension_txt << "Width size:" << width << " Height size:" << height;
+        cv::putText(res, dimension_txt.str(),
+                                cv::Point(5, 20),
+                                cv::FONT_HERSHEY_SIMPLEX, 0.3, CV_RGB(243,248,253), 1);
+
+
+        int main_matrix [3][5];
+        int n,m;
+        int px = 2*w+15;
+        int py = h + 15;
+
+          for (n=0; n<3; n++){
+            for (m=0; m<5; m++)
+            {
+            	if(px <= w*(m+1) && py <= h*(n+1))
+            	{
+            		main_matrix[n][m]=1;
+            		cout << main_matrix[n][m];
+            		cout << "valor w: " <<w*(m+1) <<" m= " << m << "valor h: " << h*(n+1) <<endl;
+            	}
+            	else
+            	{
+            		main_matrix[n][m]=0;
+            		cout << main_matrix[n][m] ;
+            		cout << "valor w: " <<w*(m+1) <<" m= " << m << "valor h: " << h*(n+1) <<endl;
+            	}
+
+
+            }
+            cout << endl;
+          }
+
+
         // >>>>> Filtering
         vector<vector<cv::Point> > balls;
         vector<cv::Rect> ballsBox;
