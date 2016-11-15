@@ -266,23 +266,24 @@ int main()
 
         int main_matrix [3][5];
         int n,m;
-        int px = 2*w+15;
-        int py = h + 15;
+        int px = triCenter.x;
+        int py = triCenter.y;
+
 
           for (n=0; n<3; n++){
             for (m=0; m<5; m++)
             {
-            	if(px <= w*(m+1) && py <= h*(n+1))
+            	if(px > w * m && px <= w*(m+1) && py > h * n && py <= h*(n+1))
             	{
             		main_matrix[n][m]=1;
             		cout << main_matrix[n][m];
-            		cout << "valor w: " <<w*(m+1) <<" m= " << m << "valor h: " << h*(n+1) <<endl;
+            		//cout << "valor w: " <<w*(m+1) <<" m= " << m << "valor h: " << h*(n+1) <<endl;
             	}
             	else
             	{
             		main_matrix[n][m]=0;
             		cout << main_matrix[n][m] ;
-            		cout << "valor w: " <<w*(m+1) <<" m= " << m << "valor h: " << h*(n+1) <<endl;
+            		//cout << "valor w: " <<w*(m+1) <<" m= " << m << "valor h: " << h*(n+1) <<endl;
             	}
 
 
