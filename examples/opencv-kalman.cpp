@@ -21,6 +21,11 @@
 // Vector
 #include <vector>
 
+// Math
+#include <math.h>
+
+#define PI 3.14159265
+
 using namespace std;
 
 // >>>>> Color to be tracked
@@ -230,8 +235,23 @@ int main()
 				}else{
 					triEdge = result[1];
 				}
+				cv::line(res,triCenter,triEdge, CV_RGB(255,164,6),2);
 
-				cv::line(res,triCenter,triEdge, CV_RGB(255,164,6),4);
+				stringstream coordinatesCenter;
+				coordinatesCenter << "P(" << triCenter.x << "," << triCenter.y << ")";
+				cv::putText(res, coordinatesCenter.str(),
+						triCenter, cv::FONT_HERSHEY_SIMPLEX, 0.3, CV_RGB(109,232,39), 1);
+
+				stringstream coordinatesEdge;
+				coordinatesEdge << "P(" << triEdge.x << "," << triEdge.y << ")";
+						cv::putText(res, coordinatesEdge.str(),
+								triEdge, cv::FONT_HERSHEY_SIMPLEX, 0.3, CV_RGB(109,232,39), 1);
+
+				//atan2
+				stringstream angle;
+				angle << atan2(10,2)*180 / PI;
+						cv::putText(res, angle.str(),
+								cv::Point(triCenter.x, triCenter.y+20), cv::FONT_HERSHEY_SIMPLEX, 0.3, CV_RGB(109,232,39), 1);
 
 			}else{
 				cout << "Corners found:" << result.size() << endl;
