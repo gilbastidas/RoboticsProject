@@ -249,9 +249,35 @@ int main()
 
 				//atan2
 				stringstream angle;
-				angle << atan2(10,2)*180 / PI;
-						cv::putText(res, angle.str(),
-								cv::Point(triCenter.x, triCenter.y+20), cv::FONT_HERSHEY_SIMPLEX, 0.3, CV_RGB(109,232,39), 1);
+				//angle << atan2(10,2)*180 / PI;
+				//angle << atan2(triEdge.y-triCenter.y,triEdge.x-triCenter.x);
+				//angle << -1*(atan2(triEdge.y-triCenter.y,triEdge.x-triCenter.x)*180 / PI);
+				int direction = -1*(atan2(triEdge.y-triCenter.y,triEdge.x-triCenter.x)*180 / PI);
+				if (direction <= 22.5 & direction >= -22.5){
+						cv::putText(res, "East",
+								triEdge, cv::FONT_HERSHEY_SIMPLEX, 0.7, CV_RGB(255,0,255), 2);
+				}else if(direction < 67.5 & direction > 22.5){
+					cv::putText(res, "North-East",
+								triEdge, cv::FONT_HERSHEY_SIMPLEX, 0.7, CV_RGB(255,0,255), 2);
+				}else if(direction <= 112.5 & direction >= 67.5){
+					cv::putText(res, "North",
+								triEdge, cv::FONT_HERSHEY_SIMPLEX, 0.7, CV_RGB(255,0,255), 2);
+				}else if(direction < 157.5 & direction > 112.5){
+					cv::putText(res, "North-West",
+								triEdge, cv::FONT_HERSHEY_SIMPLEX, 0.7, CV_RGB(255,0,255), 2);
+				}else if(direction >= 157.5 || direction <= -157.5){
+					cv::putText(res, "West",
+								triEdge, cv::FONT_HERSHEY_SIMPLEX, 0.7, CV_RGB(255,0,255), 2);
+				}else if(direction < -22.5 & direction > -67.5){
+					cv::putText(res, "South-East",
+								triEdge, cv::FONT_HERSHEY_SIMPLEX, 0.7, CV_RGB(255,0,255), 2);
+				}else if(direction <= -67.5 & direction >= -112.5){
+					cv::putText(res, "South",
+								triEdge, cv::FONT_HERSHEY_SIMPLEX, 0.7, CV_RGB(255,0,255), 2);
+				}else if(direction < -112.5 & direction > -157.5){
+					cv::putText(res, "South-West",
+								triEdge, cv::FONT_HERSHEY_SIMPLEX, 0.7, CV_RGB(255,0,255), 2);
+				}
 
 			}else{
 				cout << "Corners found:" << result.size() << endl;
@@ -267,8 +293,10 @@ int main()
         //Drawing grid
         int width=res.size().width;
         int height=res.size().height;
-        int w = width/5;
-        int h = height/3;
+        int rows = 8;
+        int columns = 11;
+        int w = width/columns;
+        int h = height/rows;
         for (int i=0; i<height; i+=h)
         	cv::line(res,cv::Point(0,i),cv::Point(width,i), CV_RGB(255,164,6),1, 8);
 
@@ -284,14 +312,14 @@ int main()
                                 cv::FONT_HERSHEY_SIMPLEX, 0.3, CV_RGB(243,248,253), 1);
 
 
-        int main_matrix [3][5];
+        int main_matrix [rows][columns];
         int n,m;
         int px = triCenter.x;
         int py = triCenter.y;
 
 
-          for (n=0; n<3; n++){
-            for (m=0; m<5; m++)
+          for (n=0; n<rows; n++){
+            for (m=0; m<columns; m++)
             {
             	if(px > w * m && px <= w*(m+1) && py > h * n && py <= h*(n+1))
             	{
