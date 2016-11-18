@@ -205,7 +205,7 @@ int main()
         vector<vector<cv::Point> > triangleContours;
 
         vector<cv::Point> result;
-        cv::findContours(rangeRes, contours, CV_RETR_EXTERNAL,
+        cv::findContours(rangeResOrange, contours, CV_RETR_EXTERNAL,
                          CV_CHAIN_APPROX_NONE);
         cv::findContours(rangeRes, triangleContours, CV_RETR_LIST,
                                  CV_CHAIN_APPROX_SIMPLE);
@@ -288,7 +288,42 @@ int main()
 //					}
 //				}
 			}
+
         }
+
+        vector<vector<cv::Point> >  obstacles;
+        vector<cv::Rect>  obstaclesBox;
+        for (size_t i = 0; i < contours.size(); i++) {
+        	cv::Rect oBox;
+        	oBox = cv::boundingRect(contours[i]);
+        	float ratio = (float) oBox.width / (float) oBox.height;
+        	if(ratio > 1.0f)
+        		ratio = 1.0f/ratio;
+
+        	if(ratio > 0.75 && oBox.area()>= 300){
+        		obstacles.push_back(contours[i]);
+        		obstaclesBox.push_back(oBox);
+
+        	}
+        }
+        vector<cv::Point>  centers;
+        // >>>>> Detection result
+        for (size_t i = 0; i < obstacles.size(); i++){
+        	cv::drawContours(res, obstacles, i, CV_RGB(20,150,20), 1);
+        	cv::rectangle(res, obstaclesBox[i], CV_RGB(0,255,0), 2);
+
+        	cv::Point center;
+            center.x = obstaclesBox[i].x + obstaclesBox[i].width / 2;
+            center.y = obstaclesBox[i].y + obstaclesBox[i].height / 2;
+            cv::circle(res, center, 2, CV_RGB(20,150,20), -1);
+            centers.push_back(center);
+//            stringstream sstr;
+//            sstr << "(" << center.x << "," << center.y << ")";
+//            cv::putText(res, sstr.str(),
+//                     cv::Point(center.x + 3, center.y - 3),
+//                     cv::FONT_HERSHEY_SIMPLEX, 0.5, CV_RGB(20,150,20), 2);
+        }
+                // <<<<< Detection result
 
         //Drawing grid
         int width=res.size().width;
@@ -343,22 +378,22 @@ int main()
         // >>>>> Filtering
         vector<vector<cv::Point> > balls;
         vector<cv::Rect> ballsBox;
-        for (size_t i = 0; i < contours.size(); i++)
-        {
-            cv::Rect bBox;
-            bBox = cv::boundingRect(contours[i]);
-
-            float ratio = (float) bBox.width / (float) bBox.height;
-            if (ratio > 1.0f)
-                ratio = 1.0f / ratio;
-
-            // Searching for a bBox almost square
-            if (ratio > 0.75 && bBox.area() >= 400)
-            {
-                balls.push_back(contours[i]);
-                ballsBox.push_back(bBox);
-            }
-        }
+//        for (size_t i = 0; i < contours.size(); i++)
+//        {
+//            cv::Rect bBox;
+//            bBox = cv::boundingRect(contours[i]);
+//
+//            float ratio = (float) bBox.width / (float) bBox.height;
+//            if (ratio > 1.0f)
+//                ratio = 1.0f / ratio;
+//
+//            // Searching for a bBox almost square
+//            if (ratio > 0.75 && bBox.area() >= 400)
+//            {
+//                balls.push_back(contours[i]);
+//                ballsBox.push_back(bBox);
+//            }
+//        }
         // <<<<< Filtering
 
         //cout << "Balls found:" << ballsBox.size() << endl;
@@ -373,24 +408,7 @@ int main()
 //			}
 //		}
 
-        // >>>>> Detection result
-        for (size_t i = 0; i < balls.size(); i++)
-        {
-            //cv::drawContours(res, balls, i, CV_RGB(20,150,20), 1);
-            //cv::rectangle(res, ballsBox[i], CV_RGB(0,255,0), 2);
 
-//            cv::Point center;
-//            center.x = ballsBox[i].x + ballsBox[i].width / 2;
-//            center.y = ballsBox[i].y + ballsBox[i].height / 2;
-//            cv::circle(res, center, 2, CV_RGB(20,150,20), -1);
-//
-//            stringstream sstr;
-//            sstr << "(" << center.x << "," << center.y << ")";
-//            cv::putText(res, sstr.str(),
-//                        cv::Point(center.x + 3, center.y - 3),
-//                        cv::FONT_HERSHEY_SIMPLEX, 0.5, CV_RGB(20,150,20), 2);
-        }
-        // <<<<< Detection result
 
         // >>>>> Kalman Update
         if (balls.size() == 0)
