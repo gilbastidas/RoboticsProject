@@ -216,68 +216,127 @@ int main()
 
         for (size_t i = 0; i < triangleContours.size(); i++) {
         	cv::approxPolyDP(cv::Mat(triangleContours[i]), result, cv::arcLength(cv::Mat(triangleContours[i]), true)*0.02, true);
+        	if(result.size() == 4){
+        		float l1, l2, l3, l4;
+        		l1 = distance(result[0].x, result[0].y, result[1].x, result[1].y);
+        		l2 = distance(result[1].x, result[1].y, result[2].x, result[2].y);
+        		l3 = distance(result[2].x, result[2].y, result[3].x, result[3].y);
+        		l4 = distance(result[3].x, result[3].y, result[0].x, result[0].y);
+
+        		//Edger result from the average of two points
+        		cv::Point edgeResult;
+        		vector<cv::Point>  newEdges;
+
+        		// Finding closest points
+        		if(l1 < l2 && l1 < l3 && l1 < l4){
+        			//Construct new array
+        			edgeResult.x = (result[0].x + result[1].x)/2;
+        			edgeResult.y = (result[0].y + result[1].y)/2;
+        			newEdges.push_back(edgeResult);
+        			newEdges.push_back(result[2]);
+        			newEdges.push_back(result[3]);
+
+        		}
+        		else if(l2 < l1 && l2 < l3 && l2 < l4){
+        			edgeResult.x = (result[1].x + result[2].x)/2;
+					edgeResult.y = (result[1].y + result[2].y)/2;
+					newEdges.push_back(edgeResult);
+					newEdges.push_back(result[0]);
+					newEdges.push_back(result[3]);
+        		}
+        		else if(l3 < l1 && l3 < l2 && l3 < l4){
+        			edgeResult.x = (result[2].x + result[3].x)/2;
+        			edgeResult.y = (result[2].y + result[3].y)/2;
+        			newEdges.push_back(edgeResult);
+					newEdges.push_back(result[0]);
+					newEdges.push_back(result[1]);
+        		}
+        		else {
+        			edgeResult.x = (result[3].x + result[0].x)/2;
+        			edgeResult.y = (result[3].y + result[0].y)/2;
+        			newEdges.push_back(edgeResult);
+					newEdges.push_back(result[1]);
+					newEdges.push_back(result[2]);
+        		}
+        		result = newEdges;
+        	}
+
+
+
         	if(result.size() == 3){
-				cout << "Triangle Found!" << endl;
-				cv::line(res,result[0],result[1], CV_RGB(0,255,0),4);
-				cv::line(res,result[1],result[2], CV_RGB(0,255,0),4);
-				cv::line(res,result[0],result[2], CV_RGB(0,255,0),4);
-				cv::circle(res, result[0], 10, CV_RGB(150,20,20), -1);
-				cv::circle(res, result[1], 10, CV_RGB(150,20,20), -1);
-				cv::circle(res, result[2], 10, CV_RGB(150,20,20), -1);
-				triCenter.x = (result[0].x+result[1].x+result[2].x)/3;
-				triCenter.y = (result[0].y+result[1].y+result[2].y)/3;
-				cv::circle(res, triCenter, 10, CV_RGB(255,164,6), -1);
 
-				if(distance(result[0].x,result[0].y,result[1].x,result[1].y)<distance(result[0].x,result[0].y,result[2].x,result[2].y) && distance(result[0].x,result[0].y,result[1].x,result[1].y)<distance(result[1].x,result[1].y,result[2].x,result[2].y)){
-					triEdge = result[2];
-				}else if(distance(result[2].x,result[2].y,result[1].x,result[1].y)<distance(result[0].x,result[0].y,result[2].x,result[2].y) && distance(result[2].x,result[2].y,result[1].x,result[1].y)<distance(result[0].x,result[0].y,result[1].x,result[1].y)){
-					triEdge = result[0];
-				}else{
-					triEdge = result[1];
-				}
-				cv::line(res,triCenter,triEdge, CV_RGB(255,164,6),2);
+				cv::Rect roundApx;
+				roundApx = cv::boundingRect(result);
+				float ratio = (float) roundApx.width / (float) roundApx.height;
+				if(ratio > 1.0f)
+					ratio = 1.0f/ratio;
 
-				stringstream coordinatesCenter;
-				coordinatesCenter << "P(" << triCenter.x << "," << triCenter.y << ")";
-				cv::putText(res, coordinatesCenter.str(),
-						triCenter, cv::FONT_HERSHEY_SIMPLEX, 0.3, CV_RGB(109,232,39), 1);
+				// Ratio is the rectangularity of the contour, while closer to one is more squared, closer to 0 is more rectangular
+				// Area is the space within the rectangle contour
+        		if(ratio > 0.75 && roundApx.area()>= 150){
+        			cout << "Triangle Found!" << endl;
+					cv::line(res,result[0],result[1], CV_RGB(0,255,0),4);
+					cv::line(res,result[1],result[2], CV_RGB(0,255,0),4);
+					cv::line(res,result[0],result[2], CV_RGB(0,255,0),4);
+					cv::circle(res, result[0], 10, CV_RGB(150,20,20), -1);
+					cv::circle(res, result[1], 10, CV_RGB(150,20,20), -1);
+					cv::circle(res, result[2], 10, CV_RGB(150,20,20), -1);
+					triCenter.x = (result[0].x+result[1].x+result[2].x)/3;
+					triCenter.y = (result[0].y+result[1].y+result[2].y)/3;
+					cv::circle(res, triCenter, 10, CV_RGB(255,164,6), -1);
 
-				stringstream coordinatesEdge;
-				coordinatesEdge << "P(" << triEdge.x << "," << triEdge.y << ")";
-						cv::putText(res, coordinatesEdge.str(),
-								triEdge, cv::FONT_HERSHEY_SIMPLEX, 0.3, CV_RGB(109,232,39), 1);
+					if(distance(result[0].x,result[0].y,result[1].x,result[1].y)<distance(result[0].x,result[0].y,result[2].x,result[2].y) && distance(result[0].x,result[0].y,result[1].x,result[1].y)<distance(result[1].x,result[1].y,result[2].x,result[2].y)){
+						triEdge = result[2];
+					}else if(distance(result[2].x,result[2].y,result[1].x,result[1].y)<distance(result[0].x,result[0].y,result[2].x,result[2].y) && distance(result[2].x,result[2].y,result[1].x,result[1].y)<distance(result[0].x,result[0].y,result[1].x,result[1].y)){
+						triEdge = result[0];
+					}else{
+						triEdge = result[1];
+					}
+					cv::line(res,triCenter,triEdge, CV_RGB(255,164,6),2);
 
-				//atan2
-				stringstream angle;
-				//angle << atan2(10,2)*180 / PI;
-				//angle << atan2(triEdge.y-triCenter.y,triEdge.x-triCenter.x);
-				//angle << -1*(atan2(triEdge.y-triCenter.y,triEdge.x-triCenter.x)*180 / PI);
-				int direction = -1*(atan2(triEdge.y-triCenter.y,triEdge.x-triCenter.x)*180 / PI);
-				if (direction <= 22.5 & direction >= -22.5){
-						cv::putText(res, "East",
-								triEdge, cv::FONT_HERSHEY_SIMPLEX, 0.7, CV_RGB(255,0,255), 2);
-				}else if(direction < 67.5 & direction > 22.5){
-					cv::putText(res, "North-East",
-								triEdge, cv::FONT_HERSHEY_SIMPLEX, 0.7, CV_RGB(255,0,255), 2);
-				}else if(direction <= 112.5 & direction >= 67.5){
-					cv::putText(res, "North",
-								triEdge, cv::FONT_HERSHEY_SIMPLEX, 0.7, CV_RGB(255,0,255), 2);
-				}else if(direction < 157.5 & direction > 112.5){
-					cv::putText(res, "North-West",
-								triEdge, cv::FONT_HERSHEY_SIMPLEX, 0.7, CV_RGB(255,0,255), 2);
-				}else if(direction >= 157.5 || direction <= -157.5){
-					cv::putText(res, "West",
-								triEdge, cv::FONT_HERSHEY_SIMPLEX, 0.7, CV_RGB(255,0,255), 2);
-				}else if(direction < -22.5 & direction > -67.5){
-					cv::putText(res, "South-East",
-								triEdge, cv::FONT_HERSHEY_SIMPLEX, 0.7, CV_RGB(255,0,255), 2);
-				}else if(direction <= -67.5 & direction >= -112.5){
-					cv::putText(res, "South",
-								triEdge, cv::FONT_HERSHEY_SIMPLEX, 0.7, CV_RGB(255,0,255), 2);
-				}else if(direction < -112.5 & direction > -157.5){
-					cv::putText(res, "South-West",
-								triEdge, cv::FONT_HERSHEY_SIMPLEX, 0.7, CV_RGB(255,0,255), 2);
-				}
+					stringstream coordinatesCenter;
+					coordinatesCenter << "P(" << triCenter.x << "," << triCenter.y << ")";
+					cv::putText(res, coordinatesCenter.str(),
+							triCenter, cv::FONT_HERSHEY_SIMPLEX, 0.3, CV_RGB(109,232,39), 1);
+
+					stringstream coordinatesEdge;
+					coordinatesEdge << "P(" << triEdge.x << "," << triEdge.y << ")";
+							cv::putText(res, coordinatesEdge.str(),
+									triEdge, cv::FONT_HERSHEY_SIMPLEX, 0.3, CV_RGB(109,232,39), 1);
+
+					//atan2
+					stringstream angle;
+					//angle << atan2(10,2)*180 / PI;
+					//angle << atan2(triEdge.y-triCenter.y,triEdge.x-triCenter.x);
+					//angle << -1*(atan2(triEdge.y-triCenter.y,triEdge.x-triCenter.x)*180 / PI);
+					int direction = -1*(atan2(triEdge.y-triCenter.y,triEdge.x-triCenter.x)*180 / PI);
+					if ((direction <= 22.5) && (direction >= -22.5)){
+							cv::putText(res, "East",
+									triEdge, cv::FONT_HERSHEY_SIMPLEX, 0.7, CV_RGB(255,0,255), 2);
+					}else if(direction < 67.5 && direction > 22.5){
+						cv::putText(res, "North-East",
+									triEdge, cv::FONT_HERSHEY_SIMPLEX, 0.7, CV_RGB(255,0,255), 2);
+					}else if(direction <= 112.5 && direction >= 67.5){
+						cv::putText(res, "North",
+									triEdge, cv::FONT_HERSHEY_SIMPLEX, 0.7, CV_RGB(255,0,255), 2);
+					}else if(direction < 157.5 && direction > 112.5){
+						cv::putText(res, "North-West",
+									triEdge, cv::FONT_HERSHEY_SIMPLEX, 0.7, CV_RGB(255,0,255), 2);
+					}else if(direction >= 157.5 || direction <= -157.5){
+						cv::putText(res, "West",
+									triEdge, cv::FONT_HERSHEY_SIMPLEX, 0.7, CV_RGB(255,0,255), 2);
+					}else if(direction < -22.5 && direction > -67.5){
+						cv::putText(res, "South-East",
+									triEdge, cv::FONT_HERSHEY_SIMPLEX, 0.7, CV_RGB(255,0,255), 2);
+					}else if(direction <= -67.5 && direction >= -112.5){
+						cv::putText(res, "South",
+									triEdge, cv::FONT_HERSHEY_SIMPLEX, 0.7, CV_RGB(255,0,255), 2);
+					}else if(direction < -112.5 && direction > -157.5){
+						cv::putText(res, "South-West",
+									triEdge, cv::FONT_HERSHEY_SIMPLEX, 0.7, CV_RGB(255,0,255), 2);
+					}
+        		}
+
 
 			}else{
 				cout << "Corners found:" << result.size() << endl;
@@ -373,7 +432,28 @@ int main()
             }
             cout << endl;
           }
+          for (int i=0;i <centers.size();i++){
+			  for (n=0; n<rows; n++){
+				  for (m=0; m<columns; m++)
+				  {
+					if(centers[i].x > w * m && centers[i].x <= w*(m+1) && centers[i].y > h * n && centers[i].y <= h*(n+1))
+					{
+						main_matrix[n][m]=2;
+						cout << main_matrix[n][m];
+						//cout << "valor w: " <<w*(m+1) <<" m= " << m << "valor h: " << h*(n+1) <<endl;
+					}
+					else
+					{
+						main_matrix[n][m]=0;
+						cout << main_matrix[n][m] ;
+						//cout << "valor w: " <<w*(m+1) <<" m= " << m << "valor h: " << h*(n+1) <<endl;
+					}
 
+
+				  }
+				  cout << endl;
+				}
+          }
 
         // >>>>> Filtering
         vector<vector<cv::Point> > balls;
