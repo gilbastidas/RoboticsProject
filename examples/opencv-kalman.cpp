@@ -24,6 +24,8 @@
 // Math
 #include <math.h>
 
+#include "aStar.h"
+
 #define PI 3.14159265
 
 using namespace std;
@@ -98,7 +100,7 @@ int main()
     // <<<< Kalman Filter
 
     // Camera Index
-    int idx = 0;
+    int idx = 1;
 
     // Camera Capture
     cv::VideoCapture cap;
@@ -183,8 +185,11 @@ int main()
 
         cv::inRange(frmHsv, cv::Scalar(MIN_H_BLUE / 2, 100, 80),
                     cv::Scalar(MAX_H_BLUE / 2, 255, 255), rangeRes);
-        cv::inRange(frmHsv2, cv::Scalar(126,89,0),
-        			cv::Scalar(179, 255, 255), rangeResOrange);
+//        cv::inRange(frmHsv2, cv::Scalar(126,89,0),
+//        			cv::Scalar(179, 255, 255), rangeResOrange);
+        //Orange detection parameters 13:55q
+        cv::inRange(frmHsv2, cv::Scalar(0,91,183), // Really good parameters at 15:00 of november
+                			cv::Scalar(179, 255, 255), rangeResOrange);
         // <<<<< Color Thresholding
 
         // >>>>> Improving the result
@@ -359,7 +364,7 @@ int main()
         	if(ratio > 1.0f)
         		ratio = 1.0f/ratio;
 
-        	if(ratio > 0.75 && oBox.area()>= 300){
+        	if(ratio > 0.5 && oBox.area()>= 300){
         		obstacles.push_back(contours[i]);
         		obstaclesBox.push_back(oBox);
 
@@ -387,8 +392,8 @@ int main()
         //Drawing grid
         int width=res.size().width;
         int height=res.size().height;
-        int rows = 8;
-        int columns = 11;
+        int rows = 10;
+        int columns = 20;
         int w = width/columns;
         int h = height/rows;
         for (int i=0; i<height; i+=h)
@@ -410,50 +415,89 @@ int main()
         int n,m;
         int px = triCenter.x;
         int py = triCenter.y;
+        for (n=0; n<rows; n++){
+        	for (m=0; m<columns; m++)
+        	{
+        		//if (main_matrix[n][m] != 2)
+        			main_matrix[n][m] = 0;
+        	}
+        }
 
 
+          for (int i=0;i <centers.size();i++){
+			  for (n=0; n<rows; n++){
+				  for (m=0; m<columns; m++)
+				  {
+					if(centers[i].x > (w * m) && centers[i].x <= (w*(m+1)) && centers[i].y > (h * n) && centers[i].y <= (h*(n+1)) )
+					{
+						main_matrix[n][m]=2;
+						//cout << main_matrix[n][m];
+						//cout << "valor w: " <<w*(m+1) <<" m= " << m << "valor h: " << h*(n+1) <<endl;
+					}
+				  }
+				  //cout << endl;
+				}
+          }
+          for (n=0; n<rows; n++){
+			  for (m=0; m<columns; m++)
+			  {
+				  if(main_matrix[n][m]==2){
+					  for (int i=max(n-1,0); i<=min(n+1,rows); i++){
+						  for (int j=max(m-1,0); j<=min(m+1,columns); j++){
+							  main_matrix[i][j]=1;
+						  }
+					  }
+				  }
+			  }
+		  }
+          int temp_matrix[20][10];
+		  for(int y=0;y<rows;y++)
+		  {
+          			  for(int x=0;x<columns;x++) temp_matrix[x][y]=main_matrix[y][x];
+          }
           for (n=0; n<rows; n++){
             for (m=0; m<columns; m++)
             {
             	if(px > w * m && px <= w*(m+1) && py > h * n && py <= h*(n+1))
             	{
-            		main_matrix[n][m]=1;
-            		cout << main_matrix[n][m];
+            		main_matrix[n][m]=3;
+            		//cout << main_matrix[n][m];
             		//cout << "valor w: " <<w*(m+1) <<" m= " << m << "valor h: " << h*(n+1) <<endl;
             	}
             	else
             	{
-            		main_matrix[n][m]=0;
-            		cout << main_matrix[n][m] ;
+            		//cout << main_matrix[n][m] ;
             		//cout << "valor w: " <<w*(m+1) <<" m= " << m << "valor h: " << h*(n+1) <<endl;
             	}
 
 
             }
-            cout << endl;
+            //cout << endl;
           }
-          for (int i=0;i <centers.size();i++){
-			  for (n=0; n<rows; n++){
-				  for (m=0; m<columns; m++)
-				  {
-					if(centers[i].x > w * m && centers[i].x <= w*(m+1) && centers[i].y > h * n && centers[i].y <= h*(n+1))
-					{
-						main_matrix[n][m]=2;
-						cout << main_matrix[n][m];
-						//cout << "valor w: " <<w*(m+1) <<" m= " << m << "valor h: " << h*(n+1) <<endl;
-					}
-					else
-					{
-						main_matrix[n][m]=0;
-						cout << main_matrix[n][m] ;
-						//cout << "valor w: " <<w*(m+1) <<" m= " << m << "valor h: " << h*(n+1) <<endl;
-					}
+          for (n=0; n<rows; n++){
+			  for (m=0; m<columns; m++)
+			  {
+				  if(main_matrix[n][m]==2 ||main_matrix[n][m]==1)
+					  main_matrix[n][m]=1;
+			  }
+		  }
+		  for (n=0; n<rows; n++){
+			  for (m=0; m<columns; m++)
+			  {
+				  cout << main_matrix[n][m];
+			  }
+			  cout << endl;
+		  }
 
 
-				  }
-				  cout << endl;
-				}
-          }
+
+		  int startx = floor(triCenter.x/w);
+		  int starty = floor(triCenter.y/h);
+		  int finishx =0;
+		  int finishy =0;
+		  string path = aStar(temp_matrix,startx,starty,finishx,finishy);
+		  cout<<"Route:"<<endl;
+		  cout<<path<<endl<<endl;
 
         // >>>>> Filtering
         vector<vector<cv::Point> > balls;
