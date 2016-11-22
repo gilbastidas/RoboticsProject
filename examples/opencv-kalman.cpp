@@ -24,7 +24,7 @@
 // Math
 #include <math.h>
 
-#include "aStar.h"
+#include "aStar_original.h"
 
 #define PI 3.14159265
 
@@ -188,8 +188,10 @@ int main()
 //        cv::inRange(frmHsv2, cv::Scalar(126,89,0),
 //        			cv::Scalar(179, 255, 255), rangeResOrange);
         //Orange detection parameters 13:55q
-        cv::inRange(frmHsv2, cv::Scalar(0,91,183), // Really good parameters at 15:00 of november
-                			cv::Scalar(179, 255, 255), rangeResOrange);
+        //cv::inRange(frmHsv2, cv::Scalar(0,91,183), // Really good parameters at 15:00 of november, but it detects blue triangle also u.u
+        //        			cv::Scalar(179, 255, 255), rangeResOrange);
+        cv::inRange(frmHsv2, cv::Scalar(0,97,205), // Really really good parameters at 17:23 of november, and it doesn't detect blue triangle
+                        			cv::Scalar(179, 255, 255), rangeResOrange);
         // <<<<< Color Thresholding
 
         // >>>>> Improving the result
@@ -278,7 +280,7 @@ int main()
 
 				// Ratio is the rectangularity of the contour, while closer to one is more squared, closer to 0 is more rectangular
 				// Area is the space within the rectangle contour
-        		if(ratio > 0.75 && roundApx.area()>= 150){
+        		if(ratio > 0.5 && roundApx.area()>= 150){
         			cout << "Triangle Found!" << endl;
 					cv::line(res,result[0],result[1], CV_RGB(0,255,0),4);
 					cv::line(res,result[1],result[2], CV_RGB(0,255,0),4);
@@ -498,6 +500,78 @@ int main()
 		  string path = aStar(temp_matrix,startx,starty,finishx,finishy);
 		  cout<<"Route:"<<endl;
 		  cout<<path<<endl<<endl;
+		  cv::Point startCoordinate = triCenter;
+		  cv::Point nextCoordinate;
+
+		  for (n=0; n<rows; n++){
+			  for (m=0; m<columns; m++)
+			  {
+				if(px > w * m && px <= w*(m+1) && py > h * n && py <= h*(n+1) && path.length()>0)
+				{
+					//Declarar la nueva coordenada de inicio, segun la ubicacion del centroide, ubicarla en el centro del rectangulo
+					startCoordinate = cv::Point((2*w*m+w)/2, (2*h*n+h)/2);
+					cv::circle(res, startCoordinate, 5, CV_RGB(255,0,0), -1);
+
+//					for(int i=0; i<=path.length(); i++){
+//						cout<<"Path por separado: "<< path.at(i);
+//						if(selectedChar == "L"){
+//							nextCoordinate = cv::Point((2*w*m-w)/2, (2*h*n+h)/2);
+
+					// Get the following coordinate
+						for(int i=0;i<path.length();i++)
+					        {
+								char selectedChar = path.at(i);
+									if(selectedChar == 'W'){
+										//nextCoordinate = cv::Point((2*w*m-w)/2, (2*h*n+h)/2);
+										nextCoordinate = cv::Point(startCoordinate.x - w, startCoordinate.y);
+										cv::line(res,startCoordinate,nextCoordinate, CV_RGB(0,255,0),2);
+										cv::circle(res, nextCoordinate, 5, CV_RGB(255,0,0), -1);
+										startCoordinate = nextCoordinate;
+										//cout<<"Encontre un W"<< path.at(i);
+									}
+									else if(selectedChar == 'N'){
+										nextCoordinate = cv::Point(startCoordinate.x, startCoordinate.y-h);
+										cv::line(res,startCoordinate,nextCoordinate, CV_RGB(0,255,0),2);
+										cv::circle(res, nextCoordinate, 5, CV_RGB(255,0,0), -1);
+										startCoordinate = nextCoordinate;
+										//cv::circle(res, startCoordinate, 10, CV_RGB(255,0,0), -1);
+										//cout<<"Encontre un N"<< path.at(i);
+									}
+									else if(selectedChar == 'S'){
+										nextCoordinate = cv::Point(startCoordinate.x, startCoordinate.y+h);
+										cv::line(res,startCoordinate,nextCoordinate, CV_RGB(0,255,0),2);
+										cv::circle(res, nextCoordinate, 5, CV_RGB(255,0,0), -1);
+										startCoordinate = nextCoordinate;
+										//cv::circle(res, startCoordinate, 10, CV_RGB(255,0,0), -1);
+										//cout<<"Encontre un S"<< path.at(i);
+									}
+									else {
+										nextCoordinate = cv::Point(startCoordinate.x+w, startCoordinate.y);
+										cv::line(res,startCoordinate,nextCoordinate, CV_RGB(0,255,0),2);
+										cv::circle(res, nextCoordinate, 5, CV_RGB(255,0,0), -1);
+										startCoordinate = nextCoordinate;
+									}
+
+
+
+					        }
+
+
+
+					//cout << main_matrix[n][m];
+					//cout << "valor w: " <<w*(m+1) <<" m= " << m << "valor h: " << h*(n+1) <<endl;
+				}
+				else
+				{
+					//cout << main_matrix[n][m] ;
+					//cout << "valor w: " <<w*(m+1) <<" m= " << m << "valor h: " << h*(n+1) <<endl;
+				}
+
+
+			  }
+			  //cout << endl;
+			}
+
 
         // >>>>> Filtering
         vector<vector<cv::Point> > balls;

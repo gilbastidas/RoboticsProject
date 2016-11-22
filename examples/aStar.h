@@ -1,8 +1,3 @@
-// Astar.cpp
-// http://en.wikipedia.org/wiki/A*
-// Compiler: Dev-C++ 4.9.9.2
-// FB - 201012256
-// http://code.activestate.com/recipes/577457-a-star-shortest-path-algorithm/
 #include <iostream>
 #include <iomanip>
 #include <queue>
@@ -16,23 +11,14 @@ using namespace std;
 
 const int n=20; // horizontal size of the map
 const int m=10; // vertical size size of the map
-static int map[n][m];
-static int closed_nodes_map[n][m]; // map of closed (tried-out) nodes
-static int open_nodes_map[n][m]; // map of open (not-yet-tried) nodes
+static int thismap[n][m];
+static int closednodesmap[n][m]; // map of closed (tried-out) nodes
+static int opennodesmap[n][m]; // map of open (not-yet-tried) nodes
 static int dir_map[n][m]; // map of directions
 const int dir=4; // number of possible directions to go at any position
-// if dir==4
+
 static int dx[dir]={1, 0, -1, 0};
 static int dy[dir]={0, 1, 0, -1};
-// if dir==8
-//static int dx[dir]={1, 1, 0, -1, -1, -1, 0, 1};
-//static int dy[dir]={0, 1, 1, 1, 0, -1, -1, -1};
-
-//On interpreting 4 directions route
-//      0 - Right
-//		1 - Down
-//		2 - Left
-//		3 - Up
 
 class node
 {
@@ -74,12 +60,6 @@ class node
             // Euclidian Distance
             d=static_cast<int>(sqrt(xd*xd+yd*yd));
 
-            // Manhattan distance
-            //d=abs(xd)+abs(yd);
-
-            // Chebyshev distance
-            //d=max(abs(xd), abs(yd));
-
             return(d);
         }
 };
@@ -108,8 +88,8 @@ string pathFind( const int & xStart, const int & yStart,
     {
         for(x=0;x<n;x++)
         {
-            closed_nodes_map[x][y]=0;
-            open_nodes_map[x][y]=0;
+            closednodesmap[x][y]=0;
+            opennodesmap[x][y]=0;
         }
     }
 
@@ -117,25 +97,25 @@ string pathFind( const int & xStart, const int & yStart,
     n0=new node(xStart, yStart, 0, 0);
     n0->updatePriority(xFinish, yFinish);
     pq[pqi].push(*n0);
-    //open_nodes_map[x][y]=n0->getPriority(); // mark it on the open nodes map
+    //opennodesmap[x][y]=n0->getPriority(); // mark it on the open nodes map
     //gab
     delete n0;
-    open_nodes_map[xStart][yStart]=n0->getPriority(); // mark it on the open nodes map
+    opennodesmap[xStart][yStart]=n0->getPriority(); // mark it on the open nodes map
 
     // A* search
     while(!pq[pqi].empty())
     {
         // get the current node w/ the highest priority
         // from the list of open nodes
-        n0=new node( pq[pqi].top().getxPos(), pq[pqi].top().getyPos(),
-                     pq[pqi].top().getLevel(), pq[pqi].top().getPriority());
+        n0 = new node( pq[pqi].top().getxPos(), pq[pqi].top().getyPos(), pq[pqi].top().getLevel(), pq[pqi].top().getPriority() );
 
-        x=n0->getxPos(); y=n0->getyPos();
+        x = n0->getxPos(); 
+        y = n0->getyPos();
 
         pq[pqi].pop(); // remove the node from the open list
-        open_nodes_map[x][y]=0;
+        opennodesmap[x][y]=0;
         // mark it on the closed nodes map
-        closed_nodes_map[x][y]=1;
+        closednodesmap[x][y]=1;
 
         // quit searching when the goal state is reached
         //if((*n0).estimate(xFinish, yFinish) == 0)
@@ -146,11 +126,11 @@ string pathFind( const int & xStart, const int & yStart,
             string path="";
             while(!(x==xStart && y==yStart))
             {
-                j=dir_map[x][y];
-                c='0'+(j+dir/2)%dir;
-                path=c+path;
-                x+=dx[j];
-                y+=dy[j];
+                j = dir_map[x][y];
+                c = '0'+ (j+dir/2)%dir;
+                path = c + path;
+                x += dx[j];
+                y += dy[j];
             }
 
             // garbage collection
@@ -165,8 +145,7 @@ string pathFind( const int & xStart, const int & yStart,
         {
             xdx=x+dx[i]; ydy=y+dy[i];
 
-            if(!(xdx<0 || xdx>n-1 || ydy<0 || ydy>m-1 || map[xdx][ydy]==1
-                || closed_nodes_map[xdx][ydy]==1))
+            if( !( (xdx < 0) || (xdx > (n-1)) || (ydy < 0) || (ydy > (m-1)) || (thismap[xdx][ydy] == 1 ) || (closednodesmap[xdx][ydy] == 1) ) )
             {
                 // generate a child node
                 m0=new node( xdx, ydy, n0->getLevel(),
@@ -175,25 +154,21 @@ string pathFind( const int & xStart, const int & yStart,
                 m0->updatePriority(xFinish, yFinish);
 
                 // if it is not in the open list then add into that
-                if(open_nodes_map[xdx][ydy]==0)
+                if(opennodesmap[xdx][ydy]==0)
 
                 {
-                    open_nodes_map[xdx][ydy]=m0->getPriority();
+                    opennodesmap[xdx][ydy]=m0->getPriority();
                     pq[pqi].push(*m0);
                     // mark its parent node direction
                     dir_map[xdx][ydy]=(i+dir/2)%dir;
                 }
-                else if(open_nodes_map[xdx][ydy]>m0->getPriority())
+                else if(opennodesmap[xdx][ydy]>m0->getPriority())
                 {
                     // update the priority info
-                    open_nodes_map[xdx][ydy]=m0->getPriority();
+                    opennodesmap[xdx][ydy]=m0->getPriority();
                     // update the parent direction info
                     dir_map[xdx][ydy]=(i+dir/2)%dir;
 
-                    // replace the node
-                    // by emptying one pq to the other one
-                    // except the node to be replaced will be ignored
-                    // and the new node will be pushed in instead
                     while(!(pq[pqi].top().getxPos()==xdx &&
                            pq[pqi].top().getyPos()==ydy))
                     {
@@ -226,7 +201,10 @@ string aStar(int new_map[n][m],int xA,int yA,int xB,int yB)
     
     for(int y=0;y<m;y++)
     {
-        for(int x=0;x<n;x++) map[x][y]=new_map[x][y];
+        for(int x=0;x<n;x++) 
+            {
+                thismap[x][y]=new_map[x][y];
+            }
     }
 
     cout<<"Map Size (X,Y): "<<n<<","<<m<<endl;
@@ -246,30 +224,30 @@ string aStar(int new_map[n][m],int xA,int yA,int xB,int yB)
         int j; char c;
         int x=xA;
         int y=yA;
-        map[x][y]=2;
+        thismap[x][y]=2;
         for(int i=0;i<route.length();i++)
         {
             c =route.at(i);
             j=atoi(&c);
             x=x+dx[j];
             y=y+dy[j];
-            map[x][y]=3;
+            thismap[x][y]=3;
         }
-        map[x][y]=4;
+        thismap[x][y]=4;
 
         // display the map with the route
         for(int y=0;y<m;y++)
         {
             for(int x=0;x<n;x++)
-                if(map[x][y]==0)
+                if(thismap[x][y]==0)
                     cout<<".";
-                else if(map[x][y]==1)
+                else if(thismap[x][y]==1)
                     cout<<"O"; //obstacle
-                else if(map[x][y]==2)
+                else if(thismap[x][y]==2)
                     cout<<"S"; //start
-                else if(map[x][y]==3)
+                else if(thismap[x][y]==3)
                     cout<<"R"; //route
-                else if(map[x][y]==4)
+                else if(thismap[x][y]==4)
                     cout<<"F"; //finish
             cout<<endl;
         }
@@ -280,9 +258,5 @@ string aStar(int new_map[n][m],int xA,int yA,int xB,int yB)
 	replace(route.begin(),route.end(),'0','E');
 	replace(route.begin(),route.end(),'1','S');
 
-	//cout<<"Route:"<<endl;
-	//cout<<route<<endl<<endl;
-
 	return(route);
 	}
-
