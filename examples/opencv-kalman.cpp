@@ -394,8 +394,8 @@ int main()
         //Drawing grid
         int width=res.size().width;
         int height=res.size().height;
-        int rows = 10;
-        int columns = 20;
+        int rows = 8;
+        int columns = 11;
         int w = width/columns;
         int h = height/rows;
         for (int i=0; i<height; i+=h)
@@ -441,12 +441,24 @@ int main()
 				}
           }
           for (n=0; n<rows; n++){
+        	  cv::Point obCoordinate;
 			  for (m=0; m<columns; m++)
 			  {
 				  if(main_matrix[n][m]==2){
 					  for (int i=max(n-1,0); i<=min(n+1,rows); i++){
 						  for (int j=max(m-1,0); j<=min(m+1,columns); j++){
 							  main_matrix[i][j]=1;
+							  obCoordinate = cv::Point((2*w*m+w)/2, (2*h*n+h)/2);
+							  //Drawing caution points
+							  cv::circle(res, cv::Point(obCoordinate.x+w, obCoordinate.y), 5, CV_RGB(255,165,0), -1);
+							  cv::circle(res, cv::Point(obCoordinate.x-w, obCoordinate.y), 5, CV_RGB(255,165,0), -1);
+							  cv::circle(res, cv::Point(obCoordinate.x-w, obCoordinate.y-h), 5, CV_RGB(255,165,0), -1);
+							  cv::circle(res, cv::Point(obCoordinate.x+w, obCoordinate.y-h), 5, CV_RGB(255,165,0), -1);
+							  cv::circle(res, cv::Point(obCoordinate.x, obCoordinate.y+h), 5, CV_RGB(255,165,0), -1);
+							  cv::circle(res, cv::Point(obCoordinate.x+w, obCoordinate.y+h), 5, CV_RGB(255,165,0), -1);
+							  cv::circle(res, cv::Point(obCoordinate.x-w, obCoordinate.y+h), 5, CV_RGB(255,165,0), -1);
+							  cv::circle(res, cv::Point(obCoordinate.x, obCoordinate.y-h), 5, CV_RGB(255,165,0), -1);
+
 						  }
 					  }
 				  }
